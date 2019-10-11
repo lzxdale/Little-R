@@ -1,0 +1,134 @@
+---
+title: "Task4"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+
+library(readr)
+library(stringr)
+Jan <- read.csv("ADHESIVES-JANUARY 2018.csv")
+description <- na.omit(data.frame(Jan$DESCRIPTION))
+
+
+for(i in description){
+  temp <- str_split(as.character(i), " ")
+}
+
+name <- NULL
+for(i in 1:727){
+  for(j in 1:length(temp[[i]])){
+    temp[[i]][j] <- toupper(temp[[i]][j])
+    name[[i]] <- temp[[i]][!temp[[i]] %in% 'BAGS']
+    name[[i]] <- name[[i]][!name[[i]] %in% 'BAG']
+    name[[i]] <- name[[i]][!name[[i]] %in% 'CONT']
+    name[[i]] <- name[[i]][!name[[i]] %in% 'CAN']
+    name[[i]] <- name[[i]][!name[[i]] %in% 'MODIFIED']
+    name[[i]] <- name[[i]][!name[[i]] %in% 'JAR']
+    name[[i]] <- name[[i]][!name[[i]] %in% 'STC']
+    name[[i]] <- name[[i]][!name[[i]] %in% 'ADV']
+    name[[i]] <- name[[i]][!name[[i]] %in% 'KGS']
+    name[[i]] <- name[[i]][!name[[i]] %in% 'OF']
+    name[[i]] <- name[[i]][!name[[i]] %in% 'CTR']
+    name[[i]] <- name[[i]][!name[[i]] %in% 'STC']
+    name[[i]] <- gsub('[[:digit:]]+', '', name[[i]])
+    name[[i]] <- name[[i]][!name[[i]] %in% 'X']
+    name[[i]] <- gsub('[[:punct:] ]+',' ',name[[i]])
+    name[[i]]<-name[[i]][name[[i]]!=""] 
+    name[[i]]<-name[[i]][name[[i]]!=" "]
+    name[[i]] <- str_trim(name[[i]])
+  }
+}
+
+for (i in 1:727) {
+  y <- gregexpr("GLUE", name[i])
+  if (y[[1]][1] != -1){
+    name[i] <- "GLUE"
+  }
+  y <- gregexpr("ADHESIVE", name[i])
+  if (y[[1]][1] != -1){
+    name[i] <- "ADHESIVE"
+  }
+  y <- gregexpr("PASTE", name[i])
+  if (y[[1]][1] != -1){
+    name[i] <- "PASTE"
+  }
+  y <- gregexpr("TAPE", name[i])
+  if (y[[1]][1] != -1){
+    name[i] <- "TAPE"
+  }
+   y <- gregexpr("TAPES", name[i])
+  if (y[[1]][1] != -1){
+    name[i] <- "TAPE"
+  }
+   y <- gregexpr("PROTEIN", name[i])
+  if (y[[1]][1] != -1){
+    name[i] <- "PROTEIN"
+  }
+   y <- gregexpr("EPOXY", name[i])
+   if (y[[1]][1] != -1){
+    name[i] <- "EPOXY"
+   }
+   y <- gregexpr("STARCH", name[i])
+   if (y[[1]][1] != -1){
+    name[i] <- "STARCH"
+   }
+   y <- gregexpr("SEALANT", name[i])
+   if (y[[1]][1] != -1){
+    name[i] <- "SEALANT"
+   }
+   y <- gregexpr("PLASTIC", name[i])
+   if (y[[1]][1] != -1){
+    name[i] <- "PLASTIC"
+   }
+    y <- gregexpr("ENZYME", name[i])
+   if (y[[1]][1] != -1){
+    name[i] <- "ENZYME"
+   }
+    y <- gregexpr("ENZYMES", name[i])
+   if (y[[1]][1] != -1){
+    name[i] <- "ENZYME"
+   }
+     y <- gregexpr("CASEINATE", name[i])
+   if (y[[1]][1] != -1){
+    name[i] <- "CASEINATE"
+   }
+}
+
+
+title <- NULL
+for (i in 1:727) {
+  for (j in 1:length(name[[i]])){
+    x <- as.character(name[[i]][j])
+    if((nchar(x) <= 2 | x == "PKGS" | x== "PKG") && x!="UV" && x!="TB"){
+        next
+      }
+    y <- gregexpr(x, name[i])
+    if (y[[1]][1] != -1){
+      title[i] <- name[[i]][j]
+      break
+    }
+  }
+}
+title
+
+title <- data.frame(title)
+Jan <- cbind(Jan,title)
+
+#tmp <- data.frame(title)
+#tmp2<- unique(tmp$title)
+#tmp2
+
+
+library(plyr)
+Jan<-data.frame(Jan)
+#Jan1<- ddply(Jan,~IMPORTER+EXPORTER+ORIGIN+title, summarise, L..COST..PhP.=sum(as.numeric(L..COST..PhP.)), QUANTITY.kg.=sum(as.numeric(QUANTITY.kg.)))
+#Jan1$Phpkg<- Jan1$L..COST..PhP./Jan1$QUANTITY.kg.
+
+#View(Jan1)
+
+write.csv(Jan, "JANUARY 2018-des.csv")
+
+
+```
+
