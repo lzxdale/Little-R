@@ -11,20 +11,20 @@ library(leafpop)
 library(mapview)
 library(DT)
 
-DF <- read.csv("JANUARY 2018-des.csv")
+DF <- read.csv("Collection_data.csv")
 product_list <- sort(unique(DF$title))
-exporter_list <- sort(unique(DF$IMPORTER))
+exporter_list <- sort(unique(DF$EXPORTER))
 country_list <- sort(unique(DF$Countries))
-importer_list <- sort(unique(DF$EXPORTER))
+importer_list <- sort(unique(DF$IMPORTER))
 
 
 ui <- fluidPage(
-  headerPanel('Adhesives Product'),
+  headerPanel('Product Analysis'),
   sidebarPanel(
     selectInput("action", label = h4("Select Action"), 
-                 choices = c("Top 10 Countries - Heatmap", "Top 10 Countries - Barplot" ,"Top 10 Importers",
-                             "Median Price","Average Price","Median and Average Comparison",
-                             "Importer","Exporter","Totals"),
+                choices = c("Top 10 Countries - Heatmap", "Top 10 Countries - Barplot" ,"Top 10 Importers",
+                            "Median Price","Average Price","Median and Average Comparison",
+                            "Importer","Exporter","Totals"),
                 selected = 1),
     uiOutput('ui1'),
     uiOutput('ui2'),
@@ -32,7 +32,7 @@ ui <- fluidPage(
     uiOutput('ui4'),
     uiOutput('ui5'),
     hr()
-    ),
+  ),
   mainPanel(
     uiOutput('result'),
     uiOutput('result2'),
@@ -56,7 +56,7 @@ server <- function(input, output){
                                          choices = product_list),
            "Median and Average Comparison"=  selectInput("product_1", label = h4("Select Product"), 
                                                          choices = product_list),
-           "Importer" = selectInput("importer_cry", label = h4("Select Import Company"),
+           "Importer" = selectInput("importer_com", label = h4("Select Import Company"),
                                     choices = importer_list,
                                     selected = 1),
            "Exporter" = selectInput("exporter_cry", label = h4("Select Export Country"),
@@ -64,7 +64,7 @@ server <- function(input, output){
                                     selected = 1),
            "Totals" = selectInput("product_1", label = h4("Select Product"), 
                                   choices = product_list)
-           )
+    )
   })
   # output$ui2 <- renderUI({
   #   switch(input$action,
@@ -117,7 +117,7 @@ server <- function(input, output){
     
   })
   
-
+  
   
   output$ui4 <- renderUI({
     if (is.null(input$action))
@@ -144,13 +144,13 @@ server <- function(input, output){
     
   })
   
-emptymap <- function( )({
-  top_countries <- DF %>% subset(title == input$product_1) %>% subset(MONTH == input$month) %>% group_by(Countries) %>% summarise(Total = sum(as.numeric(QUANTITY.kg.))) %>% top_n(n = 10, wt = Total) 
-  #top_countries <- DF %>% subset(title == input$product_1) %>% group_by(ORIGIN) %>% summarise(Total = sum(as.numeric(QUANTITY.kg.))) %>% top_n(n = 10, wt = Total) 
-  top_countries=top_countries[order(top_countries$Total,decreasing = TRUE),]
-  if(length(top_countries$Total) == 0) return(h4('There is no data available under this category.'))
-}) 
-
+  emptymap <- function( )({
+    top_countries <- DF %>% subset(title == input$product_1) %>% subset(MONTH == input$month) %>% group_by(Countries) %>% summarise(Total = sum(as.numeric(QUANTITY.kg.))) %>% top_n(n = 10, wt = Total) 
+    #top_countries <- DF %>% subset(title == input$product_1) %>% group_by(ORIGIN) %>% summarise(Total = sum(as.numeric(QUANTITY.kg.))) %>% top_n(n = 10, wt = Total) 
+    top_countries=top_countries[order(top_countries$Total,decreasing = TRUE),]
+    if(length(top_countries$Total) == 0) return(h4('There is no data available under this category.'))
+  }) 
+  
   
   
   output$result <- renderUI({
@@ -193,13 +193,13 @@ emptymap <- function( )({
   })
   
   
-####### Graph and output table ###############
+  ####### Graph and output table ###############
   ###exporter info######
-
+  
   
   
   ###Summary and table #####
-
+  
   
   
   
@@ -365,8 +365,6 @@ emptymap <- function( )({
   })
   
 }
-  
+
 
 shinyApp(ui = ui, server = server)
-
-

@@ -1,0 +1,161 @@
+---
+title: "Task4"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(readr)
+library(stringr)
+Jan <- read.csv("ADHESIVES-JANUARY 2018.csv")
+Feb <- read.csv("ADHESIVES-FEBRUARY 2018.csv")
+Mar <- read.csv("ADHESIVES-MARCH 2018.csv")
+Apr <- read.csv("ADHESIVES-APRIL 2018.csv")
+May <- read.csv("ADHESIVES-MAY 2018.csv")
+Jun <- read.csv("ADHESIVES-JUNE 2018.csv")
+Jul <- read.csv("ADHESIVES-JULY 2018.csv")
+Aug <- read.csv("ADHESIVES-AUGUST 2018.csv")
+Sep <- read.csv("ADHESIVES-SEPT 2018.csv")
+Oct <- read.csv("ADHESIVES-OCTOBER 2018.csv")
+Nov <- read.csv("ADHESIVES-NOVEMBER 2018.csv")
+Dec <- read.csv("ADHESIVES-DECEMBER 2018.csv")
+
+data <- Jan
+Jan$MONTH <-1
+data <- Jan
+data1 <- list(Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec)
+for (i in 2:length(data1)){
+  data1[[i]]$MONTH <- i
+  names(data1[[i]]) <- names(Jan)
+  data <- rbind(data,data1[[i]])
+}
+
+description <- na.omit(data.frame(data$DESCRIPTION))
+
+for(i in description){
+  temp <- str_split(as.character(i), " ")
+}
+
+name <- temp
+for(i in 1:nrow(data)){
+  for(j in 1:length(temp[[i]])){
+    name[[i]] <- temp[[i]][!temp[[i]] %in% 'BAGS']
+    name[[i]] <- name[[i]][!name[[i]] %in% 'BAG']
+    name[[i]] <- name[[i]][!name[[i]] %in% 'CONT']
+    name[[i]] <- name[[i]][!name[[i]] %in% 'CAN']
+    name[[i]] <- name[[i]][!name[[i]] %in% 'JAR']
+    name[[i]] <- name[[i]][!name[[i]] %in% 'STC']
+    name[[i]] <- name[[i]][!name[[i]] %in% 'ADV']
+    name[[i]] <- name[[i]][!name[[i]] %in% 'KGS']
+    name[[i]] <- name[[i]][!name[[i]] %in% 'OF']
+    name[[i]] <- name[[i]][!name[[i]] %in% 'CTR']
+    name[[i]] <- name[[i]][!name[[i]] %in% 'STC']
+    name[[i]] <- gsub('[[:digit:]]+', '', name[[i]])
+    name[[i]] <- name[[i]][!name[[i]] %in% 'X']
+    name[[i]] <- gsub('[[:punct:] ]+',' ',name[[i]])
+    name[[i]]<-name[[i]][name[[i]]!=""] 
+    name[[i]]<-name[[i]][name[[i]]!=" "]
+    #name[[i]] <- str_trim(name[[i]])
+  }
+}
+
+for (i in 1:nrow(data)) {
+  y <- gregexpr("GLUE", name[i],ignore.case = T)
+  if (y[[1]][1] != -1){
+    name[i] <- "GLUE"
+  }
+  y <- gregexpr("ADHESIVE", name[i],ignore.case = T)
+  if (y[[1]][1] != -1){
+    name[i] <- "ADHESIVE"
+  }
+  y <- gregexpr("MODIFIED", name[i],ignore.case = T)
+  if (y[[1]][1] != -1){
+    name[i] <- "MODIFIED"
+  }
+  y <- gregexpr("TAPE", name[i],ignore.case = T)
+  if (y[[1]][1] != -1){
+    name[i] <- "TAPE"
+  }
+   y <- gregexpr("TAPES", name[i],ignore.case = T)
+  if (y[[1]][1] != -1){
+    name[i] <- "TAPE"
+  }
+   y <- gregexpr("PROTEIN", name[i],ignore.case = T)
+  if (y[[1]][1] != -1){
+    name[i] <- "PROTEIN"
+  }
+   y <- gregexpr("EPOXY", name[i],ignore.case = T)
+   if (y[[1]][1] != -1){
+    name[i] <- "EPOXY"
+   }
+   y <- gregexpr("STARCH", name[i],ignore.case = T)
+   if (y[[1]][1] != -1){
+    name[i] <- "STARCH"
+   }
+   y <- gregexpr("SEALANT", name[i],ignore.case = T)
+   if (y[[1]][1] != -1){
+    name[i] <- "SEALANT"
+   }
+   y <- gregexpr("SEAL", name[i],ignore.case = T)
+   if (y[[1]][1] != -1){
+    name[i] <- "SEAL"
+   }
+    y <- gregexpr("ENZYME", name[i],ignore.case = T)
+   if (y[[1]][1] != -1){
+    name[i] <- "ENZYME"
+   }
+    y <- gregexpr("ENZYMES", name[i],ignore.case = T)
+   if (y[[1]][1] != -1){
+    name[i] <- "ENZYME"
+   }
+     y <- gregexpr("CASEINATE", name[i],ignore.case = T)
+   if (y[[1]][1] != -1){
+    name[i] <- "CASEINATE"
+   }
+    y <- gregexpr("GELATIN", name[i],ignore.case = T)
+   if (y[[1]][1] != -1){
+    name[i] <- "GELATIN"
+   }
+}
+
+for (i in 1:nrow(data)){
+  if(length(name[[i]]) >= 2){
+    name[[i]] <- "OTHERS"
+  }
+}
+
+for (i in 1:nrow(data)){
+    if(nchar(as.character(name[[i]]) <= 3)){
+        name[i] <-"OTHERS" 
+        break
+  }
+}
+
+title <- NULL
+for (i in 1:nrow(data)){
+  title[i]<-name[[i]][1]
+}
+
+for (i in 1:nrow(data)) {
+  y <- gregexpr("MODIFIED", title[i])
+  if (y[[1]][1] != -1){
+    title[i] <- "MODIFIED STARCH"
+  }
+}
+
+title <- data.frame(title)
+data <- cbind(data,title)
+
+#tmp <- data.frame(title)
+#tmp2<- unique(tmp$title)
+#tmp2
+
+library(plyr)
+data <-data.frame(data)
+data1<- ddply(data,~IMPORTER+EXPORTER+ORIGIN+MONTH+title,summarise,L..COST..PhP.=sum(L..COST..PhP.),QUANTITY.kg.=sum(QUANTITY.kg.))
+data1$Phpkg<- data1$L..COST..PhP./data1$QUANTITY.kg.
+library(countrycode)
+data1$Countries <- countrycode(data1$ORIGIN,'iso2c','country.name')
+write.csv(data1,"Collection_data.csv")
+
+```
+

@@ -1,15 +1,27 @@
-df1 <- read.csv("ADHESIVES-JANUARY 2018.csv")
-Des <- df1$DESCRIPTION
-des_list <- levels(Des)
-tmp <- c()
-for (var in des_list) {
-  strsplit(var,' ')
-  tmp<- c(tmp,unlist(strsplit(var,' ')))
+df1 <- read.csv("Collection_data.csv")
+title <- df1$title
+Product <- c('ADHESIVE',
+             'ENZYMES',
+             'EPOXY',
+             'GELATIN',
+             'GLUE',
+             'MODIFIED STARCH',
+             'PROTEIN',
+             'SEAL',
+             'SEALANT',
+             'STARCH',
+             'TAPE',
+             'OTHERS')
+for (var in 1:length(title)) {
+  if(title[var] %in% Product){
+  }
+  else{
+    title[var] = 'OTHERS'
+  }
 }
-unique(tmp)
+df1$title = title
 # most frequent words that appear, kinda hard to catagorize products
-summary(as.factor(tmp)) 
+summary(as.factor(title)) 
+df1 = droplevels.data.frame(df1)
 
-
-df1 <- read.csv("JANUARY 2018-des.csv")
-unique(df1$title)
+write.csv(df1,"Collection_data.csv")

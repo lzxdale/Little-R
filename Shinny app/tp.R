@@ -11,20 +11,20 @@ library(leafpop)
 library(mapview)
 library(DT)
 
-DF <- read.csv("JANUARY 2018-des.csv")
+DF <- read.csv("Collection_data.csv")
 product_list <- sort(unique(DF$title))
-exporter_list <- sort(unique(DF$IMPORTER))
+exporter_list <- sort(unique(DF$EXPORTER))
 country_list <- sort(unique(DF$Countries))
-importer_list <- sort(unique(DF$EXPORTER))
+importer_list <- sort(unique(DF$IMPORTER))
 
 
 ui <- fluidPage(
-  headerPanel('Adhesives Product'),
+  headerPanel('Product Analysis'),
   sidebarPanel(
     selectInput("action", label = h4("Select Action"), 
-                 choices = c("Top 10 Countries - Heatmap", "Top 10 Countries - Barplot" ,"Top 10 Importers",
-                             "Median Price","Average Price","Median and Average Comparison",
-                             "Importer","Exporter","Totals"),
+                choices = c("Top 10 Countries - Heatmap", "Top 10 Countries - Barplot" ,"Top 10 Importers",
+                            "Median Price","Average Price","Median and Average Comparison",
+                            "Importer","Exporter","Totals"),
                 selected = 1),
     uiOutput('ui1'),
     uiOutput('ui2'),
@@ -32,7 +32,7 @@ ui <- fluidPage(
     uiOutput('ui4'),
     uiOutput('ui5'),
     hr()
-    ),
+  ),
   mainPanel(
     uiOutput('result'),
     uiOutput('result2'),
@@ -42,6 +42,8 @@ ui <- fluidPage(
 )
 
 server <- function(input, output){
+  #####################
+  ####Dependend UI#####
   output$ui1 <- renderUI({
     switch(input$action,
            "Top 10 Countries - Heatmap" = selectInput("product_1", label = h4("Select Product"),
@@ -56,68 +58,47 @@ server <- function(input, output){
                                          choices = product_list),
            "Median and Average Comparison"=  selectInput("product_1", label = h4("Select Product"), 
                                                          choices = product_list),
-           "Importer" = selectInput("importer_cry", label = h4("Select Import Company"),
+           "Importer" = selectInput("importer_com", label = h4("Select Import Company"),
                                     choices = importer_list,
                                     selected = 1),
-           "Exporter" = selectInput("exporter_cry", label = h4("Select Export Country"),
+           "Exporter" = selectInput("exporter_country", label = h4("Select Export Country"),
                                     choices = country_list,
                                     selected = 1),
            "Totals" = selectInput("product_1", label = h4("Select Product"), 
                                   choices = product_list)
-           )
-  })
-  # output$ui2 <- renderUI({
-  #   switch(input$action,
-  #          "Exporter" = selectInput("co", label = h4("Select Export Company"),
-  #                                   if( input$type_subex == "ALL"){
-  #                                     choices = c("ALL", as.character(sort(unique(DF[DF$Countries == input$exporter_cry,]$EXPORTER))))}
-  #                                   else{
-  #                                     choices =  as.character(sort(unique(DF[DF$Countries == input$exporter_cry & export$Category == input$exp_product,]$Company)))
-  #                                   },
-  #                                   selected = 1)
-  #   )
-  # })
+    )})
   
-  ###product given country or company is selected#####
+  ####Section Action = Exporter/importer ###
+
+  ###choicing company under exp###
+  output$ui2 <- renderUI({
+    if (length(input$exporter_product) == 0)
+      return()
+    switch(input$action,
+           "Exporter" = selectInput("export_company", label = h4("Select Export Company"),
+                                    if( input$exporter_product == "ALL"){
+                                      choices = c("ALL", as.character(sort(unique(DF[DF$Countries == input$exporter_country,]$EXPORTER))))}
+                                    else{
+                                      choices =  as.character(sort(unique(DF[DF$Countries == input$exporter_country & DF$title == input$exporter_product,]$EXPORTER)))
+                                    },
+                                    selected = 1)
+    )
+  })
   output$ui3 <- renderUI({
     if (is.null(input$action))
       return()
-    if (is.null(input$group1))
+    if (is.null(input$product_1))
       return()
     switch(input$action,
-           "Importer" = selectInput("imp_product", label = h4("Select Category"),
-                                    choices = c("ALL", as.character(sort(unique(short[short$Company == input$importer,]$Category)))),
+           "Importer" = selectInput("importer_product", label = h4("Select a Product"),
+                                    choices = c("ALL", as.character(sort(unique(DF[DF$IMPORTER == input$importer_com,]$title)))),
                                     selected = 1),
-           "Exporter" = selectInput("exp_product", label = h4("Select Category"),
-                                    choices = c("ALL", as.character(sort(unique(export[export$Countries == input$exporter,]$Category)))),
-                                    selected = 1),
-           "Top 10 Countries - Heatmap" = selectInput("type", label = h4("Select Category"), 
-                                                      if (input$group1 != "CHEESE") {choices = sort(unique(merged[merged$Group == input$group1,]$Type))
-                                                      } else {choices = sort(unique(merged[merged$Group2 == input$group2,]$Type))}),
-           "Top 10 Countries - Barplot" = selectInput("type", label = h4("Select Category"), 
-                                                      if (input$group1 != "CHEESE") {choices = sort(unique(merged[merged$Group == input$group1,]$Type))
-                                                      } else {choices = sort(unique(merged[merged$Group2 == input$group2,]$Type))}),
-           "Top 10 Importers" = selectInput("type", label = h4("Select Category"), 
-                                            if (input$group1 != "CHEESE") {choices = sort(unique(merged[merged$Group == input$group1,]$Type))
-                                            } else {choices = sort(unique(merged[merged$Group2 == input$group2,]$Type))}),
-           "Median Price" = selectInput("type", label = h4("Select Category"), 
-                                        if (input$group1 != "CHEESE") {choices = sort(unique(merged[merged$Group == input$group1,]$Type))
-                                        } else {choices = sort(unique(merged[merged$Group2 == input$group2,]$Type))}),
-           "Average Price" = selectInput("type", label = h4("Select Category"), 
-                                         if (input$group1 != "CHEESE") {choices = sort(unique(merged[merged$Group == input$group1,]$Type))
-                                         } else {choices = sort(unique(merged[merged$Group2 == input$group2,]$Type))}),
-           "Median and Average Comparison" = selectInput("type", label = h4("Select Category"), 
-                                                         if (input$group1 != "CHEESE") {choices = sort(unique(merged[merged$Group == input$group1,]$Type))
-                                                         } else {choices = sort(unique(merged[merged$Group2 == input$group2,]$Type))}),
-           "Totals" =  selectInput("type", label = h4("Select Category"), 
-                                   if (input$group1 != "CHEESE") {choices = sort(unique(merged[merged$Group == input$group1,]$Type))
-                                   } else {choices = sort(unique(merged[merged$Group2 == input$group2,]$Type))})
+           "Exporter" = selectInput("exporter_product", label = h4("Select a Product"),
+                                    choices = c("ALL", as.character(sort(unique(DF[DF$Countries == input$exporter_country,]$title)))),
+                                    selected = 1)
     )
-    
-    
   })
   
-
   
   output$ui4 <- renderUI({
     if (is.null(input$action))
@@ -143,26 +124,26 @@ server <- function(input, output){
     )
     
   })
-  
-emptymap <- function( )({
-  top_countries <- DF %>% subset(title == input$product_1) %>% subset(MONTH == input$month) %>% group_by(Countries) %>% summarise(Total = sum(as.numeric(QUANTITY.kg.))) %>% top_n(n = 10, wt = Total) 
-  #top_countries <- DF %>% subset(title == input$product_1) %>% group_by(ORIGIN) %>% summarise(Total = sum(as.numeric(QUANTITY.kg.))) %>% top_n(n = 10, wt = Total) 
-  top_countries=top_countries[order(top_countries$Total,decreasing = TRUE),]
-  if(length(top_countries$Total) == 0) return(h4('There is no data available under this category.'))
-}) 
-
+  emptymap <- function( )({
+    top_countries <- DF %>% subset(title == input$product_1) %>% subset(MONTH == input$month) %>% group_by(Countries) %>% summarise(Total = sum(as.numeric(QUANTITY.kg.))) %>% top_n(n = 10, wt = Total) 
+    #top_countries <- DF %>% subset(title == input$product_1) %>% group_by(ORIGIN) %>% summarise(Total = sum(as.numeric(QUANTITY.kg.))) %>% top_n(n = 10, wt = Total) 
+    top_countries=top_countries[order(top_countries$Total,decreasing = TRUE),]
+    if(length(top_countries$Total) == 0) return(h4('There is no data available under this category.'))
+  }) 
   
   
+  #####################
+  ### out put set up ##
   output$result <- renderUI({
     switch (input$action,
-            'Top 10 Countries - Heatmap' = emptymap(),
+            'Top 10 Countries - Heatmap' = emptymap() ,
             'Top 10 Countries - Barplot' = plotlyOutput('top_exporter_bar'),
             'Top 10 Importers' = plotlyOutput('top_importer_pie'),
             'Median Price' = plotlyOutput('price_median'),
             'Average Price' = plotlyOutput('price_mean'),
             'Median and Average Comparison' = plotlyOutput('price_sidebyside'),
-            'Importer' = h3("Summary Table: "),
-            'Exporter' = h3("Summary Table: "),
+            'Importer' = h3("Summary Table"),
+            'Exporter' = h3("Summary Table"),
             'Totals' = h3("Category : ",input$product_1)
     ) 
   })
@@ -177,8 +158,8 @@ emptymap <- function( )({
   })
   output$result3 <- renderUI({
     switch (input$action,
-            'Importer' =  h3("Company Name: ",input$importer),
-            'Exporter' =  h3("Export Country: ",input$exporter),
+            'Importer' =  h3("Company Name: ",input$importer_com),
+            'Exporter' =  h3("Export Country: ",input$export_company),
             'Totals' = h3("Summary Table, Year 2019")
             
             
@@ -191,49 +172,37 @@ emptymap <- function( )({
             'Totals' = tableOutput('totals')
     ) 
   })
+  #####################
+  ###Table####
   
-  
-####### Graph and output table ###############
-  ###exporter info######
-
-  
-  
-  ###Summary and table #####
-
-  
-  
-  
-  
-  ####Top_importer_10####
-  output$top_importer_pie <- renderPlotly ({
-    top_importer <- DF %>% subset(title == input$product_1) %>% subset(MONTH == input$month) %>% group_by(IMPORTER) %>% summarise(Total = sum(QUANTITY.kg.)) %>% top_n(n = 10, wt = Total)
-    top_importer <- top_importer[order(top_importer$Total,decreasing = TRUE),]
-    if( length(top_importer$IMPORTER) == 0) return( plot_ly( type = "pie" ) %>% layout( title = "There is no data available under this category."))
-    plot_ly(
-      top_importer,
-      labels = ~IMPORTER, values = ~Total, type = 'pie',
-      colors = 'Blues',
-      showlegend = F
-    ) %>% layout( title = "Top Importers")
+  ###For Importer Table#####
+  output$comp_info <- renderTable({
+    DF1 <- DF
+    DF1$Phpkg = formatC(DF1$Phpkg, format="d", big.mark=",")
+    DF1$QUANTITY.kg. =formatC(DF1$QUANTITY.kg., format="d", big.mark=",")
+    DF1$L..COST..PhP. =formatC(DF1$L..COST..PhP., format="d", big.mark=",")
+    if(input$importer_product=="ALL") {
+      return(DF1[DF1$IMPORTER == input$importer_com,c(1,4:ncol(DF1)-1)])
+    }else{
+      return(DF1[DF1$IMPORTER == input$importer_com & DF1$title ==input$importer_product,c(1,4:ncol(DF1)-1)] )
+    }
   })
   
-  ###top_10_exporter_bar####
-  output$top_exporter_bar <- renderPlotly ({
-    top_countries <- DF %>% subset(title == input$product_1) %>% subset(MONTH == input$month) %>% group_by(Countries) %>% summarise(Total = sum(QUANTITY.kg.)) %>% top_n(n = 10, wt = Total)
-    top_countries$Countries <- factor(top_countries$Countries, levels = unique(top_countries$Countries))
-    top_countries <- top_countries[order(-top_countries$Total),]
-    if (length(top_countries$Countries) == 0) return( plot_ly(  type = "bar") %>% layout( xaxis = list(title = "", range = c(0,10)), yaxis = list(title = "", range = c(0,10)),title = "There is no data available under this category.") )
-    plot_ly(top_countries,
-            x = ~Countries,
-            y = ~Total,
-            type = "bar"
-    ) %>%
-      layout(
-        title = "Top Export Countries",
-        yaxis = list(title = 'Quantity (kg)')
-      )
+  ###For Exportor Table#####
+  output$export_info <- renderTable({
+    DF1 <- DF
+    DF1$Phpkg = formatC(DF1$Phpkg, format="d", big.mark=",")
+    DF1$QUANTITY.kg. =formatC(DF1$QUANTITY.kg., format="d", big.mark=",")
+    DF1$L..COST..PhP. =formatC(DF1$L..COST..PhP., format="d", big.mark=",")
+    DF1 <- DF1[DF1$Countries == input$exporter_country,c(3,11,4,6:10)]
+    if(input$export_company != "ALL") {
+      DF1 <- DF1[DF1$EXPORTER == input$export_company,]
+    }
+    if(input$exporter_product != "ALL"){
+      DF1 <- DF1[DF1$EXPORTER == input$exporter_product,]
+    }
+    return(DF1)
   })
-  
   
   ####Price comparison####
   output$price_sidebyside <- renderPlotly({
@@ -288,7 +257,6 @@ emptymap <- function( )({
   })
   
   
-  
   ####price_median#####
   output$price_median <- renderPlotly({
     price_median = DF %>% subset(title == input$product_1)  %>% group_by(MONTH) %>% summarise(Median = median(Phpkg))
@@ -313,9 +281,44 @@ emptymap <- function( )({
     
   })
   
+  #####################
+  ## Graph and Chart ##
+  ###top_10_exporter_bar####
+  output$top_exporter_bar <- renderPlotly ({
+    top_countries <- DF %>% subset(title == input$product_1) %>% subset(MONTH == input$month) %>% group_by(Countries) %>% summarise(Total = sum(QUANTITY.kg.)) %>% top_n(n = 10, wt = Total)
+    top_countries$Countries <- factor(top_countries$Countries, levels = unique(top_countries$Countries))
+    top_countries <- top_countries[order(-top_countries$Total),]
+    if (length(top_countries$Countries) == 0) return(plot_ly(type = "bar") %>% layout( xaxis = list(title = "", range = c(0,10)), yaxis = list(title = "", range = c(0,10)),title = "There is no data available under this category.") )
+    plot_ly(top_countries,
+            x = ~Countries,
+            y = ~Total,
+            type = "bar"
+    ) %>%
+      layout(
+        title = "Top Export Countries",
+        yaxis = list(title = 'Quantity (kg)')
+      )
+  })
+  
+  
+  
+  ####Top_importer_10####
+  output$top_importer_pie <- renderPlotly ({
+    top_importer <- DF %>% subset(title == input$product_1) %>% subset(MONTH == input$month) %>% group_by(IMPORTER) %>% summarise(Total = sum(QUANTITY.kg.)) %>% top_n(n = 10, wt = Total)
+    top_importer <- top_importer[order(top_importer$Total,decreasing = TRUE),]
+    if( length(top_importer$IMPORTER) == 0) return( plot_ly( type = "pie" ) %>% layout( title = "There is no data available under this category."))
+    plot_ly(
+      top_importer,
+      labels = ~IMPORTER, values = ~Total, type = 'pie',
+      colors = 'Blues',
+      showlegend = F
+    ) %>% layout( title = "Top Importers")
+  })
+  
   
   
   ### heat map###
+
   output$top_exporter_map <- renderLeaflet({
     top_countries <- DF %>% subset(title == input$product_1) %>% subset(MONTH == input$month) %>% group_by(Countries) %>% summarise(Total = sum(as.numeric(QUANTITY.kg.))) %>% top_n(n = 10, wt = Total) 
     top_countries=top_countries[order(top_countries$Total,decreasing = TRUE),]
@@ -364,9 +367,6 @@ emptymap <- function( )({
                 title = "Aggregated Quantity (kg)")
   })
   
-}
   
-
-shinyApp(ui = ui, server = server)
-
-
+}
+shinyApp(ui, server)
